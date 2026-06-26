@@ -1,0 +1,84 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #213547;
+  background-color: #ffffff;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Global Custom Buttons & Hover Transitions */
+.btn-base {
+  border: none;
+  border-radius: 8px;
+  padding: 0.85rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #ffffff;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.btn-base:hover {
+  transform: translateY(-1px);
+}
+
+.btn-base:active {
+  transform: translateY(0);
+}
+
+.btn-lavender {
+  background-color: #A4A6DC;
+  box-shadow: 0 4px 12px rgba(164, 166, 220, 0.2);
+}
+
+.btn-lavender:hover {
+  background-color: #898bc5;
+  box-shadow: 0 6px 16px rgba(164, 166, 220, 0.35);
+}
+
+.btn-indigo {
+  background-color: #293180;
+  box-shadow: 0 4px 12px rgba(41, 49, 128, 0.15);
+}
+
+.btn-indigo:hover {
+  background-color: #1e2460;
+  box-shadow: 0 6px 16px rgba(41, 49, 128, 0.25);
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.25);
+}
+
+.btn-secondary-indigo {
+  background-color: rgba(41, 49, 128, 0.05);
+  color: #293180;
+  border: 1px solid rgba(41, 49, 128, 0.1);
+}
+
+.btn-secondary-indigo:hover {
+  background-color: rgba(41, 49, 128, 0.1);
+  border: 1px solid rgba(41, 49, 128, 0.2);
+}
