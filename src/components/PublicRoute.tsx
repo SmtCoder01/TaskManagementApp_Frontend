@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom'
 
 export function PublicRoute() {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('access_token')
 
   if (token) {
     return <Navigate to="/" replace />
@@ -9,3 +9,4 @@ export function PublicRoute() {
 
   return <Outlet />
 }
+

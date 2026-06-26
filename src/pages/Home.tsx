@@ -1,12 +1,14 @@
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../features/auth'
 
 export function Home() {
-  const navigate = useNavigate()
+  const { logout } = useAuth()
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    navigate('/login')
+    logout()
   }
+
+
 
   // Dummy list of workspaces to test navigation
   const workspaces = [

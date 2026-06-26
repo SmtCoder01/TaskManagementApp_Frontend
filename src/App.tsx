@@ -8,30 +8,34 @@ import { Workspace } from './pages/Workspace'
 import { WorkspaceMembers } from './pages/WorkspaceMembers'
 import { Project } from './pages/Project'
 import { NotFound } from './pages/NotFound'
+import { AuthProvider } from './features/auth'
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public Routes - Accessible only when NOT authenticated */}
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Route>
+      <AuthProvider>
+        <Routes>
+          {/* Public Routes - Accessible only when NOT authenticated */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Route>
 
-        {/* Protected Routes - Accessible only when authenticated */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/workspaces/:id" element={<Workspace />} />
-          <Route path="/workspaces/:id/members" element={<WorkspaceMembers />} />
-          <Route path="/workspaces/:id/projects/:projectId" element={<Project />} />
-        </Route>
+          {/* Protected Routes - Accessible only when authenticated */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/workspaces/:id" element={<Workspace />} />
+            <Route path="/workspaces/:id/members" element={<WorkspaceMembers />} />
+            <Route path="/workspaces/:id/projects/:projectId" element={<Project />} />
+          </Route>
 
-        {/* Catch-all Route for 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* Catch-all Route for 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   )
 }
 
 export default App
+
