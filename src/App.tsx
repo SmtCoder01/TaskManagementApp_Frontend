@@ -9,6 +9,7 @@ import { WorkspaceMembers } from './pages/WorkspaceMembers'
 import { Project } from './pages/Project'
 import { NotFound } from './pages/NotFound'
 import { AuthProvider } from './features/auth'
+import { AppShell } from './components/layout/AppShell'
 
 function App() {
   return (
@@ -23,10 +24,12 @@ function App() {
 
           {/* Protected Routes - Accessible only when authenticated */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/workspaces/:id" element={<Workspace />} />
-            <Route path="/workspaces/:id/members" element={<WorkspaceMembers />} />
-            <Route path="/workspaces/:id/projects/:projectId" element={<Project />} />
+            <Route element={<AppShell />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/workspaces/:id" element={<Workspace />} />
+              <Route path="/workspaces/:id/members" element={<WorkspaceMembers />} />
+              <Route path="/workspaces/:id/projects/:projectId" element={<Project />} />
+            </Route>
           </Route>
 
           {/* Catch-all Route for 404 */}
