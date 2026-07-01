@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { ApiError } from './parseResponse'
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
@@ -35,6 +36,21 @@ apiClient.interceptors.response.use(
         window.location.href = '/login'
       }
     }
+
+    if (error.response && error.response.data) {
+      const data = error.response.data
+      if (data.success === false) {
+        return Promise.reject(
+          new ApiError(
+            data.error?.message ?? 'Beklenmeyen bir hata oluştu.',
+            data.error?.code ?? 'UNEXPECTED_ERROR',
+            data.statusCode ?? error.response.status,
+            data.fieldErrors
+          )
+        )
+      }
+    }
+
     return Promise.reject(error)
   }
 )

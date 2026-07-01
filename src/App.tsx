@@ -10,6 +10,7 @@ import { Project } from './pages/Project'
 import { NotFound } from './pages/NotFound'
 import { AuthProvider } from './features/auth'
 import { AppShell } from './components/layout/AppShell'
+import { WorkspaceSettingsPage } from './features/workspaces'
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/workspaces/:id" element={<Workspace />} />
               <Route path="/workspaces/:id/members" element={<WorkspaceMembers />} />
+              <Route path="/workspaces/:id/settings" element={<WorkspaceSettingsPage />} />
               <Route path="/workspaces/:id/projects/:projectId" element={<Project />} />
             </Route>
           </Route>
