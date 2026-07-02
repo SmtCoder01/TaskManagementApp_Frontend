@@ -8,9 +8,9 @@ export async function register(payload: RegisterInput): Promise<User> {
   return parseResponse<User>(data)
 }
 
-export async function login(payload: LoginInput): Promise<{ token: string }> {
+export async function login(payload: LoginInput): Promise<{ accessToken: string }> {
   const { data } = await apiClient.post('/auth/login', payload)
-  return parseResponse<{ token: string }>(data)
+  return parseResponse<{ accessToken: string }>(data)
 }
 
 export async function me(): Promise<User> {

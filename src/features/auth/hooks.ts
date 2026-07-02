@@ -15,10 +15,10 @@ export function useLogin() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
-  return useMutation<{ token: string }, Error, LoginInput>({
+  return useMutation<{ accessToken: string }, Error, LoginInput>({
     mutationFn: login,
     onSuccess: async (data) => {
-      localStorage.setItem('access_token', data.token)
+      localStorage.setItem('access_token', data.accessToken)
       try {
         // Fetch current user and store in React Query cache
         const currentUser = await me()
