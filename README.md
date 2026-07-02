@@ -2,7 +2,20 @@
 
 React + Vite + TypeScript + Tailwind CSS frontend.
 
-Detaylı görev listesi için repo kökündeki `docs/FRONTEND_ANALIZ.md` dosyasına bakın.
+## Proje yapısı
+
+```
+src/
+├── api/           # HTTP client ve response yardımcıları
+├── components/    # Paylaşılan UI ve layout bileşenleri
+│   ├── layout/
+│   └── ui/
+├── features/      # Domain modülleri (auth, members, workspaces)
+├── lib/           # React Query, query key'ler
+├── pages/         # Route sayfaları
+└── types/         # Paylaşılan TypeScript tipleri
+public/            # Statik dosyalar (favicon, görseller)
+```
 
 ## Hızlı başlangıç
 
