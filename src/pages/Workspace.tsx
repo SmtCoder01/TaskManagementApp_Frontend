@@ -1,147 +1,190 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { Plus, AlertCircle, FolderKanban, Users, Settings } from 'lucide-react'
+import { useWorkspace } from '../features/workspaces/hooks'
+import { useProjects, useCreateProject } from '../features/projects/hooks'
+import { ProjectCard } from '../features/projects/components/ProjectCard'
+import { ProjectForm } from '../features/projects/components/ProjectForm'
+import { Modal } from '../components/ui/Modal'
+import { Button } from '../components/ui/Button'
+import { Pagination } from '../components/ui/Pagination'
+import { EmptyState } from '../components/ui/EmptyState'
+import { Alert } from '../components/ui/Alert'
+import { ApiError } from '../api/parseResponse'
 
 export function Workspace() {
   const { id } = useParams<{ id: string }>()
+  const workspaceId = id ? Number(id) : 0
 
-  // Simulated projects under this workspace
-  const projects = [
-    { id: 'p1', name: 'Sprint Board' },
-    { id: 'p2', name: 'Product Roadmap' },
-    { id: 'p3', name: 'Bug Tracker' },
-  ]
+  const [page, setPage] = useState(1)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [toastType, setToastType] = useState<'success' | 'error'>('success')
+
+  const { data: workspace, isLoading: isLoadingWorkspace, isError: isWorkspaceError, error: workspaceError } =
+    useWorkspace(workspaceId)
+  const { data, isLoading, isError, error } = useProjects(workspaceId, page)
+  const createMutation = useCreateProject(workspaceId)
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage(message)
+    setToastType(type)
+    setTimeout(() => {
+      setToastMessage(null)
+    }, 4000)
+  }
+
+  const handleCreateProject = async (formData: { name: string; description?: string }) => {
+    try {
+      await createMutation.mutateAsync(formData)
+      setIsCreateOpen(false)
+      showToast('Project created successfully!')
+    } catch (err) {
+      console.error(err)
+      if (err instanceof ApiError) {
+        showToast(err.message || 'Failed to create project.', 'error')
+      } else {
+        showToast('An unexpected error occurred.', 'error')
+      }
+    }
+  }
+
+  if (isLoadingWorkspace) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
+      </div>
+    )
+  }
+
+  if (isWorkspaceError || !workspace) {
+    return (
+      <Alert variant="error" className="flex items-center gap-2">
+        <AlertCircle className="h-5 w-5" />
+        <span>{workspaceError instanceof Error ? workspaceError.message : 'Workspace not found.'}</span>
+      </Alert>
+    )
+  }
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <div style={styles.navRow}>
-          <Link to="/" style={styles.backLink}>← Back to Workspaces</Link>
-          <span style={styles.separator}>/</span>
-          <span style={styles.current}>Workspace {id}</span>
+    <div className="space-y-6">
+      {toastMessage && (
+        <div
+          className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300 ${
+            toastType === 'success' ? 'bg-slate-900' : 'bg-red-600'
+          }`}
+        >
+          <span className={`h-2 w-2 rounded-full ${toastType === 'success' ? 'bg-green-500' : 'bg-white'}`} />
+          {toastMessage}
         </div>
-        <Link to={`/workspaces/${id}/members`} className="btn-base btn-secondary-indigo" style={{ padding: '0.5rem 1rem' }}>
-          Manage Members
+      )}
+
+      <div className="flex items-center gap-2 text-sm text-slate-500">
+        <Link to="/" className="hover:text-slate-900 transition">
+          Workspaces
         </Link>
-      </header>
+        <span>/</span>
+        <span className="text-slate-900 font-medium">{workspace.name}</span>
+      </div>
 
-      <main style={styles.main}>
-        <div style={styles.hero}>
-          <h1 style={styles.title}>Workspace Details</h1>
-          <p style={styles.subtitle}>Workspace Identifier: <strong>{id}</strong></p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">{workspace.name}</h1>
+          <p className="text-sm text-slate-500">
+            {workspace.description || 'Manage projects and collaborate within this workspace.'}
+          </p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link to={`/workspaces/${workspaceId}/members`}>
+            <Button variant="secondary" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              <span>Members</span>
+            </Button>
+          </Link>
+          <Link to={`/workspaces/${workspaceId}/settings`}>
+            <Button variant="secondary" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
+            </Button>
+          </Link>
+          <Button onClick={() => setIsCreateOpen(true)} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            <span>New Project</span>
+          </Button>
+        </div>
+      </div>
 
-        <section style={styles.section}>
-          <h2 style={styles.sectionTitle}>Projects</h2>
-          <div style={styles.grid}>
-            {projects.map((proj) => (
-              <Link
-                key={proj.id}
-                to={`/workspaces/${id}/projects/${proj.id}`}
-                style={styles.card}
-              >
-                <div style={styles.cardIcon}>📁</div>
-                <h3 style={styles.cardTitle}>{proj.name}</h3>
-                <span style={styles.cardArrow}>View Project →</span>
-              </Link>
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900">Projects</h2>
+
+        {isError && (
+          <Alert variant="error" className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5" />
+            <span>{error instanceof Error ? error.message : 'Failed to fetch projects.'}</span>
+          </Alert>
+        )}
+
+        {isLoading && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="animate-pulse rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-slate-100" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 w-2/3 rounded bg-slate-100" />
+                    <div className="h-3 w-1/3 rounded bg-slate-100" />
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2">
+                  <div className="h-3 w-full rounded bg-slate-100" />
+                  <div className="h-3 w-5/6 rounded bg-slate-100" />
+                </div>
+              </div>
             ))}
           </div>
-        </section>
-      </main>
+        )}
+
+        {!isLoading && !isError && (
+          <>
+            {data && data.items.length > 0 ? (
+              <div className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {data.items.map((project) => (
+                    <ProjectCard key={project.id} project={project} workspaceId={workspaceId} />
+                  ))}
+                </div>
+
+                {data.totalPages > 1 && (
+                  <div className="flex justify-center border-t border-slate-100 pt-6">
+                    <Pagination page={page} totalPages={data.totalPages} onPageChange={setPage} />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <EmptyState
+                title="No projects found"
+                description="Create a new project to start organizing tasks and tracking progress."
+                icon={<FolderKanban className="h-10 w-10 text-slate-300" />}
+                action={
+                  <Button onClick={() => setIsCreateOpen(true)} className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    <span>Create Project</span>
+                  </Button>
+                }
+                className="py-12"
+              />
+            )}
+          </>
+        )}
+      </section>
+
+      <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Create New Project">
+        <ProjectForm
+          onSubmit={handleCreateProject}
+          isLoading={createMutation.isPending}
+          submitLabel="Create Project"
+        />
+      </Modal>
     </div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    minHeight: '100vh',
-    background: '#FAFAFB',
-    color: '#1e293b',
-    fontFamily: "'Inter', sans-serif",
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '1.5rem 2rem',
-    background: '#ffffff',
-    borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
-  },
-  navRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  backLink: {
-    color: '#293180',
-    textDecoration: 'none',
-    fontWeight: 500,
-  },
-  separator: {
-    color: '#cbd5e1',
-  },
-  current: {
-    color: '#64748b',
-  },
-
-  main: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '3rem 2rem',
-  },
-  hero: {
-    marginBottom: '3rem',
-    background: 'linear-gradient(135deg, rgba(164, 166, 220, 0.08) 0%, rgba(41, 49, 128, 0.05) 100%)',
-    padding: '2rem',
-    borderRadius: '16px',
-    border: '1px solid rgba(0, 0, 0, 0.06)',
-  },
-  title: {
-    fontSize: '2rem',
-    fontWeight: 700,
-    margin: '0 0 0.5rem 0',
-    color: '#1e293b',
-  },
-  subtitle: {
-    color: '#64748b',
-    margin: 0,
-  },
-  section: {
-    marginBottom: '2rem',
-  },
-  sectionTitle: {
-    fontSize: '1.5rem',
-    fontWeight: 600,
-    marginBottom: '1.5rem',
-    color: '#1e293b',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '1.5rem',
-  },
-  card: {
-    background: '#ffffff',
-    borderRadius: '12px',
-    padding: '1.5rem',
-    border: '1px solid rgba(0, 0, 0, 0.08)',
-    textDecoration: 'none',
-    color: '#1e293b',
-    display: 'block',
-    transition: 'transform 0.2s, background-color 0.2s',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-  },
-  cardIcon: {
-    fontSize: '1.5rem',
-    marginBottom: '1rem',
-  },
-  cardTitle: {
-    margin: '0 0 1rem 0',
-    fontSize: '1.1rem',
-    fontWeight: 600,
-    color: '#1e293b',
-  },
-  cardArrow: {
-    fontSize: '0.85rem',
-    color: '#293180',
-    fontWeight: 500,
-  },
 }

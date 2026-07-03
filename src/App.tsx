@@ -11,6 +11,7 @@ import { NotFound } from './pages/NotFound'
 import { AuthProvider } from './features/auth'
 import { AppShell } from './components/layout/AppShell'
 import { WorkspaceSettingsPage } from './features/workspaces'
+import { ProjectSettingsPage } from './features/projects'
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
               <Route path="/workspaces/:id" element={<Workspace />} />
               <Route path="/workspaces/:id/members" element={<WorkspaceMembers />} />
               <Route path="/workspaces/:id/settings" element={<WorkspaceSettingsPage />} />
+              <Route path="/workspaces/:id/projects/:projectId/settings" element={<ProjectSettingsPage />} />
               <Route path="/workspaces/:id/projects/:projectId" element={<Project />} />
             </Route>
           </Route>
