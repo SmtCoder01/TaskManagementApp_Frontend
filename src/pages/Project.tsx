@@ -293,6 +293,7 @@ export function Project() {
         onDelete={selectedTask ? handleDeleteTask : undefined}
         initialValues={selectedTask}
         members={members}
+        workspaceId={workspaceId}
         isLoading={createTaskMutation.isPending || updateTaskMutation.isPending}
         isDeleting={deleteTaskMutation.isPending}
       />

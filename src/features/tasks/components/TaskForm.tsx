@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Trash2 } from 'lucide-react'
@@ -10,6 +10,7 @@ import { Textarea } from '../../../components/ui/Textarea'
 import { Button } from '../../../components/ui/Button'
 import { TaskPriority, TaskStatus } from '../types'
 import type { WorkspaceMember } from '../../members/types'
+import { UserAutocomplete } from '../../users/components/UserAutocomplete'
 import type { TaskListItem } from '../types'
 
 const taskFormSchema = z.object({
@@ -32,6 +33,7 @@ interface TaskFormProps {
   onDelete?: () => Promise<void>
   initialValues?: TaskListItem
   members: WorkspaceMember[]
+  workspaceId?: number
   isLoading: boolean
   isDeleting?: boolean
 }
@@ -43,6 +45,7 @@ export function TaskForm({
   onDelete,
   initialValues,
   members,
+  workspaceId,
   isLoading,
   isDeleting = false,
 }: TaskFormProps) {
@@ -58,6 +61,7 @@ export function TaskForm({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<TaskFormSchemaInput>({
     resolver: zodResolver(taskFormSchema),
@@ -176,23 +180,22 @@ export function TaskForm({
             {...register('dueDate')}
           />
 
-          <Select
-            id="task-assignee"
-            label="Atanan Kişi"
-            error={errors.assigneeId?.message}
-            variant={errors.assigneeId ? 'danger' : 'primary'}
-            disabled={isLoading}
-            {...register('assigneeId', {
-              setValueAs: (v) => (v === '' ? null : Number(v)),
-            })}
-          >
-            <option value="">Seçilmedi</option>
-            {members.map((m) => (
-              <option key={m.userId} value={m.userId}>
-                {m.name} {m.lastName}
-              </option>
-            ))}
-          </Select>
+          <Controller
+            name="assigneeId"
+            control={control}
+            render={({ field }) => (
+              <UserAutocomplete
+                id="task-assignee"
+                label="Atanan Kişi"
+                value={field.value ?? null}
+                onChange={field.onChange}
+                fallbackMembers={members}
+                workspaceId={workspaceId}
+                disabled={isLoading}
+                error={errors.assigneeId?.message}
+              />
+            )}
+          />
         </div>
 
         <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-6">
