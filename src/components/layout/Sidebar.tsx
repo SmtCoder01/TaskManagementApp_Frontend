@@ -15,9 +15,9 @@ export function Sidebar({ onItemClick }: SidebarProps) {
   // Resolve paths
   const workspacePath = `/workspaces/${activeWorkspaceId}`
   const membersPath = `/workspaces/${activeWorkspaceId}/members`
-  const projectsPath = projectId 
-    ? `/workspaces/${activeWorkspaceId}/projects/${projectId}` 
-    : `/workspaces/${activeWorkspaceId}/projects/all` // fallback/placeholder if no active project
+  const projectsPath = projectId
+    ? `/workspaces/${activeWorkspaceId}/projects/${projectId}`
+    : workspacePath
 
   const navItems = [
     {
