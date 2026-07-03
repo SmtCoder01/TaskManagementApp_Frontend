@@ -1,7 +1,9 @@
-export enum WorkspaceRole {
-  Member = 0,
-  Admin = 1,
-}
+export const WorkspaceRole = {
+  Member: 0,
+  Admin: 1,
+} as const
+
+export type WorkspaceRole = typeof WorkspaceRole[keyof typeof WorkspaceRole]
 
 export interface WorkspaceMember {
   userId: number

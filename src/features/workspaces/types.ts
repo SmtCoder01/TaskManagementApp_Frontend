@@ -2,6 +2,7 @@ export interface Workspace {
   id: number
   name: string
   description?: string
+  ownerId?: number
   memberCount?: number
   createdAt?: string
   updatedAt?: string

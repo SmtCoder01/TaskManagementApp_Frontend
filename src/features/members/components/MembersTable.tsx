@@ -1,6 +1,6 @@
 import { Trash2 } from 'lucide-react'
 import { RoleBadge } from './RoleBadge'
-import { WorkspaceRole, type WorkspaceMember } from '../types'
+import type { WorkspaceMember } from '../types'
 
 interface MembersTableProps {
   members: WorkspaceMember[]

@@ -8,7 +8,7 @@ export const addMemberSchema = z.object({
     .email('Geçerli bir e-posta adresi giriniz'),
   role: z
     .nativeEnum(WorkspaceRole, {
-      errorMap: () => ({ message: 'Geçerli bir rol seçiniz' }),
+      message: 'Geçerli bir rol seçiniz',
     }),
 })
 
