@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { Alert } from '../../components/ui/Alert'
 import { ApiError } from '../../api/parseResponse'
+import { applyFieldErrors, showApiErrorToast } from '../../utils/errorHandler'
 
 export function LoginPage() {
   const { mutateAsync: loginMutate, isPending } = useLogin()
@@ -33,22 +34,17 @@ export function LoginPage() {
     } catch (error: any) {
       if (error instanceof ApiError) {
         if (error.statusCode === 401) {
-          setGeneralError('Invalid email or password.')
-        } else if (error.statusCode === 422 && error.fieldErrors) {
-          // Map validation errors to React Hook Form fields
-          Object.entries(error.fieldErrors).forEach(([field, messages]) => {
-            setError(field as keyof LoginInput, {
-              type: 'server',
-              message: messages[0] || 'Validation error',
-            })
-          })
+          setGeneralError('Geçersiz e-posta veya şifre.')
+        } else if (error.statusCode === 422) {
+          applyFieldErrors(error, setError)
         } else {
-          setGeneralError(error.message || 'Something went wrong. Please try again.')
+          setGeneralError(error.message || 'Bir hata oluştu. Lütfen tekrar deneyin.')
+          showApiErrorToast(error)
         }
       } else {
-        setGeneralError('A generic error occurred. Please try again later.')
+        setGeneralError('Beklenmeyen bir hata oluştu.')
+        showApiErrorToast(error)
       }
-      // Never swallow errors - log to console
       console.error('Login error:', error)
     }
   }

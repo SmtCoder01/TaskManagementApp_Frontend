@@ -12,6 +12,7 @@ import { AuthProvider } from './features/auth'
 import { AppShell } from './components/layout/AppShell'
 import { WorkspaceSettingsPage } from './features/workspaces'
 import { ProjectSettingsPage } from './features/projects'
+import { Toaster } from 'sonner'
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
           {/* Catch-all Route for 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Toaster position="bottom-right" richColors />
       </AuthProvider>
     </BrowserRouter>
   )

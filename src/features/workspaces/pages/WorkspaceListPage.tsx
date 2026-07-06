@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, AlertCircle, Briefcase } from 'lucide-react'
+import { Plus, Briefcase } from 'lucide-react'
 import {
   useWorkspaces,
   useCreateWorkspace,
@@ -13,44 +13,28 @@ import { Modal } from '../../../components/ui/Modal'
 import { Button } from '../../../components/ui/Button'
 import { Pagination } from '../../../components/ui/Pagination'
 import { EmptyState } from '../../../components/ui/EmptyState'
-import { Alert } from '../../../components/ui/Alert'
-import { ApiError } from '../../../api/parseResponse'
+import { LoadingState } from '../../../components/ui/LoadingState'
+import { ErrorState } from '../../../components/ui/ErrorState'
+import { showApiErrorToast } from '../../../utils/errorHandler'
+import { toast } from 'sonner'
 
 export function WorkspaceListPage() {
   const [page, setPage] = useState(1)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [workspaceToDelete, setWorkspaceToDelete] = useState<Workspace | null>(null)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
-  const { data, isLoading, isError, error } = useWorkspaces(page)
+  const { data, isLoading, isError, refetch } = useWorkspaces(page)
   const createMutation = useCreateWorkspace()
   const deleteMutation = useDeleteWorkspace()
-
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToastMessage(message)
-    setToastType(type)
-    setTimeout(() => {
-      setToastMessage(null)
-    }, 4000)
-  }
 
   const handleCreateWorkspace = async (formData: { name: string; description?: string }) => {
     try {
       await createMutation.mutateAsync(formData)
       setIsCreateOpen(false)
-      showToast('Workspace created successfully!')
+      toast.success('Workspace created successfully!')
     } catch (err) {
       console.error(err)
-      if (err instanceof ApiError) {
-        if (err.code === 'WORKSPACE_ADMIN_REQUIRED' || err.statusCode === 403) {
-          showToast('Only system administrators can create workspaces.', 'error')
-        } else {
-          showToast(err.message || 'Failed to create workspace.', 'error')
-        }
-      } else {
-        showToast('An unexpected error occurred.', 'error')
-      }
+      showApiErrorToast(err, 'Failed to create workspace.')
     }
   }
 
@@ -59,7 +43,7 @@ export function WorkspaceListPage() {
     try {
       await deleteMutation.mutateAsync(workspaceToDelete.id)
       setWorkspaceToDelete(null)
-      showToast('Workspace deleted successfully!')
+      toast.success('Workspace deleted successfully!')
       // If we deleted the only item on the last page, go to previous page
       if (data?.items.length === 1 && page > 1) {
         setPage((p) => p - 1)
@@ -67,30 +51,12 @@ export function WorkspaceListPage() {
     } catch (err) {
       console.error(err)
       setWorkspaceToDelete(null)
-      if (err instanceof ApiError) {
-        if (err.code === 'WORKSPACE_DELETE_FORBIDDEN' || err.statusCode === 403) {
-          showToast('You do not have permission to delete this workspace. Admin role required.', 'error')
-        } else {
-          showToast(err.message || 'Failed to delete workspace.', 'error')
-        }
-      } else {
-        showToast('An unexpected error occurred.', 'error')
-      }
+      showApiErrorToast(err, 'Failed to delete workspace.')
     }
   }
 
   return (
     <div className="space-y-6">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300 ${
-          toastType === 'success' ? 'bg-slate-900' : 'bg-red-600'
-        }`}>
-          <span className={`h-2 w-2 rounded-full ${toastType === 'success' ? 'bg-green-500' : 'bg-white'}`} />
-          {toastMessage}
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -110,38 +76,16 @@ export function WorkspaceListPage() {
 
       {/* Error state */}
       {isError && (
-        <Alert variant="error" className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5" />
-          <span>{error instanceof Error ? error.message : 'Failed to fetch workspaces.'}</span>
-        </Alert>
+        <ErrorState
+          title="Çalışma alanları yüklenemedi"
+          message="Çalışma alanlarını listelerken bir sorun oluştu. Lütfen tekrar deneyin."
+          onRetry={() => refetch()}
+        />
       )}
 
       {/* Loading Skeletons */}
       {isLoading && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="animate-pulse rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-slate-100" />
-                <div className="space-y-2 flex-1">
-                  <div className="h-4 w-2/3 rounded bg-slate-100" />
-                  <div className="h-3 w-1/3 rounded bg-slate-100" />
-                </div>
-              </div>
-              <div className="mt-4 space-y-2">
-                <div className="h-3 w-full rounded bg-slate-100" />
-                <div className="h-3 w-5/6 rounded bg-slate-100" />
-              </div>
-              <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
-                <div className="h-4 w-24 rounded bg-slate-100" />
-                <div className="flex gap-2">
-                  <div className="h-8 w-8 rounded bg-slate-100" />
-                  <div className="h-8 w-8 rounded bg-slate-100" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <LoadingState layout="skeleton-cards" count={6} />
       )}
 
       {/* Data display */}

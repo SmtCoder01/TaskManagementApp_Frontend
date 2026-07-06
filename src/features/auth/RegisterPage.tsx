@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { Alert } from '../../components/ui/Alert'
 import { ApiError } from '../../api/parseResponse'
+import { applyFieldErrors, showApiErrorToast } from '../../utils/errorHandler'
 
 export function RegisterPage() {
   const navigate = useNavigate()
@@ -41,19 +42,15 @@ export function RegisterPage() {
       }, 2000)
     } catch (error: any) {
       if (error instanceof ApiError) {
-        if (error.statusCode === 422 && error.fieldErrors) {
-          // Map validation errors to React Hook Form fields
-          Object.entries(error.fieldErrors).forEach(([field, messages]) => {
-            setError(field as keyof RegisterInput, {
-              type: 'server',
-              message: messages[0] || 'Validation error',
-            })
-          })
+        if (error.statusCode === 422) {
+          applyFieldErrors(error, setError)
         } else {
-          setGeneralError(error.message || 'Registration failed. Please try again.')
+          setGeneralError(error.message || 'Kayıt işlemi başarısız oldu.')
+          showApiErrorToast(error)
         }
       } else {
-        setGeneralError('A generic error occurred. Please try again later.')
+        setGeneralError('Beklenmeyen bir hata oluştu.')
+        showApiErrorToast(error)
       }
       console.error('Registration error:', error)
     }

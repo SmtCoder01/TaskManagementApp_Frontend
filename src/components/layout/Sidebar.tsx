@@ -56,13 +56,14 @@ export function Sidebar({ onItemClick }: SidebarProps) {
               to={item.path}
               end={item.end}
               onClick={onItemClick}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                  isActive
+              className={({ isActive }) => {
+                const isTabActive = item.name === 'Projects' ? (isActive && !!projectId) : isActive
+                return `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+                  isTabActive
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
                     : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
                 }`
-              }
+              }}
             >
               <Icon className="h-5 w-5 shrink-0" />
               <span>{item.name}</span>

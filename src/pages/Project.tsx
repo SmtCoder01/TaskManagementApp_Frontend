@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Plus, Calendar, User, FolderKanban, AlertCircle } from 'lucide-react'
+import { Plus, Calendar, User, FolderKanban } from 'lucide-react'
 import { useWorkspaceMembers } from '../features/members/hooks'
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '../features/tasks/hooks'
 import { TaskFilters } from '../features/tasks/components/TaskFilters'
 import { TaskForm } from '../features/tasks/components/TaskForm'
 import { TaskStatus, TaskPriority } from '../features/tasks/types'
 import { useWorkspace } from '../features/workspaces/hooks'
-import { Spinner } from '../components/ui/Spinner'
-import { Alert } from '../components/ui/Alert'
+import { LoadingState } from '../components/ui/LoadingState'
+import { ErrorState } from '../components/ui/ErrorState'
+import { showApiErrorToast } from '../utils/errorHandler'
+import { toast } from 'sonner'
 import type { TaskListItem } from '../features/tasks/types'
 
 export function Project() {
@@ -20,12 +22,11 @@ export function Project() {
   const [filters, setFilters] = useState<{ status?: TaskStatus; assigneeId?: number; q?: string }>({})
   const [selectedTask, setSelectedTask] = useState<TaskListItem | undefined>(undefined)
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [alertMsg, setAlertMsg] = useState<{ message: string; variant: 'success' | 'error' } | null>(null)
 
   // Queries
   const { data: workspace } = useWorkspace(workspaceId)
   const { data: membersData } = useWorkspaceMembers(workspaceId, 1, 100)
-  const { data: tasksData, isLoading: isLoadingTasks, isError: isErrorTasks } = useTasks(workspaceId, {
+  const { data: tasksData, isLoading: isLoadingTasks, isError: isErrorTasks, refetch: refetchTasks } = useTasks(workspaceId, {
     status: filters.status,
     assigneeId: filters.assigneeId,
     q: filters.q,
@@ -40,11 +41,6 @@ export function Project() {
   
   // Filter tasks by this project ID on client-side
   const tasks = (tasksData?.items ?? []).filter((t) => t.projectId === cleanProjectId)
-
-  const showAlert = (message: string, variant: 'success' | 'error' = 'success') => {
-    setAlertMsg({ message, variant })
-    setTimeout(() => setAlertMsg(null), 4000)
-  }
 
   // Handlers
   const handleOpenCreateModal = () => {
@@ -72,7 +68,7 @@ export function Project() {
             assigneeId: formData.assigneeId,
           },
         })
-        showAlert('Görev başarıyla güncellendi!')
+        toast.success('Görev başarıyla güncellendi!')
       } else {
         // Create task
         await createTaskMutation.mutateAsync({
@@ -83,11 +79,11 @@ export function Project() {
           dueDate: formData.dueDate,
           assigneeId: formData.assigneeId,
         })
-        showAlert('Görev başarıyla oluşturuldu!')
+        toast.success('Görev başarıyla oluşturuldu!')
       }
     } catch (err: any) {
       console.error(err)
-      showAlert(err?.message || 'İşlem gerçekleştirilirken bir hata oluştu.', 'error')
+      showApiErrorToast(err, 'İşlem gerçekleştirilirken bir hata oluştu.')
     }
   }
 
@@ -97,11 +93,11 @@ export function Project() {
 
     try {
       await deleteTaskMutation.mutateAsync(selectedTask.id)
-      showAlert('Görev başarıyla silindi!')
+      toast.success('Görev başarıyla silindi!')
       setIsFormOpen(false)
     } catch (err: any) {
       console.error(err)
-      showAlert(err?.message || 'Görev silinirken bir hata oluştu.', 'error')
+      showApiErrorToast(err, 'Görev silinirken bir hata oluştu.')
     }
   }
 
@@ -135,15 +131,6 @@ export function Project() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12">
-      {/* Toast alert */}
-      {alertMsg && (
-        <div className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg animate-in fade-in duration-200 ${
-          alertMsg.variant === 'success' ? 'bg-slate-900' : 'bg-red-600'
-        }`}>
-          {alertMsg.message}
-        </div>
-      )}
-
       {/* Header */}
       <header className="border-b border-slate-200/80 bg-white px-6 py-5 shadow-sm">
         <div className="mx-auto max-w-7xl">
@@ -191,17 +178,13 @@ export function Project() {
         />
 
         {isLoadingTasks ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="text-center">
-              <Spinner className="mx-auto h-8 w-8 text-indigo-600" />
-              <p className="mt-2 text-sm text-slate-500">Görevler yükleniyor...</p>
-            </div>
-          </div>
+          <LoadingState message="Görevler yükleniyor..." />
         ) : isErrorTasks ? (
-          <Alert variant="error" className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            <span>Görevler yüklenirken bir hata oluştu.</span>
-          </Alert>
+          <ErrorState
+            title="Görevler yüklenemedi"
+            message="Görev listesi alınırken bir sorun oluştu."
+            onRetry={() => refetchTasks()}
+          />
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-5 items-start">
             {columns.map((col) => {

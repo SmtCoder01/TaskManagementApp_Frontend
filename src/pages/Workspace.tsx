@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Plus, AlertCircle, FolderKanban, Users, Settings } from 'lucide-react'
+import { Plus, FolderKanban, Users, Settings } from 'lucide-react'
 import { useWorkspace } from '../features/workspaces/hooks'
 import { useProjects, useCreateProject } from '../features/projects/hooks'
 import { ProjectCard } from '../features/projects/components/ProjectCard'
@@ -9,8 +9,10 @@ import { Modal } from '../components/ui/Modal'
 import { Button } from '../components/ui/Button'
 import { Pagination } from '../components/ui/Pagination'
 import { EmptyState } from '../components/ui/EmptyState'
-import { Alert } from '../components/ui/Alert'
-import { ApiError } from '../api/parseResponse'
+import { LoadingState } from '../components/ui/LoadingState'
+import { ErrorState } from '../components/ui/ErrorState'
+import { showApiErrorToast } from '../utils/errorHandler'
+import { toast } from 'sonner'
 
 export function Workspace() {
   const { id } = useParams<{ id: string }>()
@@ -18,67 +20,39 @@ export function Workspace() {
 
   const [page, setPage] = useState(1)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
-  const { data: workspace, isLoading: isLoadingWorkspace, isError: isWorkspaceError, error: workspaceError } =
+  const { data: workspace, isLoading: isLoadingWorkspace, isError: isWorkspaceError, refetch: refetchWorkspace } =
     useWorkspace(workspaceId)
-  const { data, isLoading, isError, error } = useProjects(workspaceId, page)
+  const { data, isLoading, isError, refetch: refetchProjects } = useProjects(workspaceId, page)
   const createMutation = useCreateProject(workspaceId)
-
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToastMessage(message)
-    setToastType(type)
-    setTimeout(() => {
-      setToastMessage(null)
-    }, 4000)
-  }
 
   const handleCreateProject = async (formData: { name: string; description?: string }) => {
     try {
       await createMutation.mutateAsync(formData)
       setIsCreateOpen(false)
-      showToast('Project created successfully!')
+      toast.success('Project created successfully!')
     } catch (err) {
       console.error(err)
-      if (err instanceof ApiError) {
-        showToast(err.message || 'Failed to create project.', 'error')
-      } else {
-        showToast('An unexpected error occurred.', 'error')
-      }
+      showApiErrorToast(err, 'Failed to create project.')
     }
   }
 
   if (isLoadingWorkspace) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
-      </div>
-    )
+    return <LoadingState message="Çalışma alanı yükleniyor..." />
   }
 
   if (isWorkspaceError || !workspace) {
     return (
-      <Alert variant="error" className="flex items-center gap-2">
-        <AlertCircle className="h-5 w-5" />
-        <span>{workspaceError instanceof Error ? workspaceError.message : 'Workspace not found.'}</span>
-      </Alert>
+      <ErrorState
+        title="Çalışma alanı yüklenemedi"
+        message="Çalışma alanı bilgileri alınırken bir hata oluştu."
+        onRetry={() => refetchWorkspace()}
+      />
     )
   }
 
   return (
     <div className="space-y-6">
-      {toastMessage && (
-        <div
-          className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300 ${
-            toastType === 'success' ? 'bg-slate-900' : 'bg-red-600'
-          }`}
-        >
-          <span className={`h-2 w-2 rounded-full ${toastType === 'success' ? 'bg-green-500' : 'bg-white'}`} />
-          {toastMessage}
-        </div>
-      )}
-
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <Link to="/" className="hover:text-slate-900 transition">
           Workspaces
@@ -118,30 +92,15 @@ export function Workspace() {
         <h2 className="text-lg font-semibold text-slate-900">Projects</h2>
 
         {isError && (
-          <Alert variant="error" className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            <span>{error instanceof Error ? error.message : 'Failed to fetch projects.'}</span>
-          </Alert>
+          <ErrorState
+            title="Projeler yüklenemedi"
+            message="Bu çalışma alanındaki projeler listelenirken bir hata oluştu."
+            onRetry={() => refetchProjects()}
+          />
         )}
 
         {isLoading && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="animate-pulse rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-slate-100" />
-                  <div className="space-y-2 flex-1">
-                    <div className="h-4 w-2/3 rounded bg-slate-100" />
-                    <div className="h-3 w-1/3 rounded bg-slate-100" />
-                  </div>
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="h-3 w-full rounded bg-slate-100" />
-                  <div className="h-3 w-5/6 rounded bg-slate-100" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <LoadingState layout="skeleton-cards" count={6} />
         )}
 
         {!isLoading && !isError && (
