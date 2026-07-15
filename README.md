@@ -82,7 +82,7 @@ The project uses Vite-style environment variables. Configure them in your `.env`
 
 | Variable Name | Description | Default Value |
 | :--- | :--- | :--- |
-| `VITE_API_BASE_URL` | The base URL of the backend API. If left empty, requests fallback to the `/api` proxy. | `http://localhost:5174` |
+| `VITE_API_BASE_URL` | The base URL of the backend API. **Leave empty for local dev** so requests use the `/api` Vite proxy (avoids CORS). | *(empty)* |
 | `VITE_ENABLE_MSW` | If set to `true`, enables Mock Service Worker for mocking endpoints locally. | `false` |
 
 ---
@@ -96,8 +96,8 @@ npm run dev
 ```
 
 - **Default Port**: `http://localhost:5173`
-- **Proxy Setup**: All API calls targeting `/api` are automatically proxied to the backend at `http://localhost:5174` (configured in `vite.config.ts`).
-- **Backend Requirement**: Ensure the .NET backend API is active at `http://localhost:5174` (or configure `VITE_API_BASE_URL` to point to your backend endpoint directly).
+- **Proxy Setup**: All API calls targeting `/api` are automatically proxied to the backend at `https://localhost:7052` (configured in `vite.config.ts`). The browser only talks to `localhost:5173`, so **no backend CORS is required**.
+- **Backend Requirement**: Ensure the .NET backend API is running (`dotnet run` in `TaskManagementApp.WebApi`). Swagger: `https://localhost:7052/swagger`.
 
 ---
 
@@ -137,14 +137,19 @@ npm run e2e
 
 ## Troubleshooting
 
-### 1. Backend Not Running / Connection Errors
-- **Symptom**: Console shows `ERR_CONNECTION_REFUSED` or network timeouts.
-- **Solution**: Ensure your .NET backend is running. Go to the backend folder (`TaskManagementAppApi/TaskManagementApp.WebApi`) and execute `dotnet run --launch-profile http`.
+### 1. CORS / Wrong API URL
+- **Symptom**: Browser console shows CORS errors, or requests go to `http://localhost:5174` instead of the Vite dev server.
+- **Cause**: `VITE_API_BASE_URL` is set to a direct backend URL. The backend has no CORS policy.
+- **Solution**: Remove or comment out `VITE_API_BASE_URL` in `.env`. Restart `npm run dev`. Requests will use `/api` and the Vite proxy to `https://localhost:7052`.
 
-### 2. Authentication Tokens Expiring / Immediate Redirects
+### 2. Backend Not Running / Connection Errors
+- **Symptom**: Console shows `ERR_CONNECTION_REFUSED` or network timeouts.
+- **Solution**: Ensure your .NET backend is running. Go to the backend folder (`TaskManagementAppApi/TaskManagementApp.WebApi`) and execute `dotnet run`.
+
+### 3. Authentication Tokens Expiring / Immediate Redirects
 - **Symptom**: Logging in redirects you right back to the login page.
 - **Solution**: Check if your backend is configured to issue valid JWTs. Check your browser localStorage for `access_token` and verify its structure.
 
-### 3. Missing CSS styles / Tailwind issues
+### 4. Missing CSS styles / Tailwind issues
 - **Symptom**: UI elements look basic or unstyled.
 - **Solution**: Ensure you are using Tailwind v4. Run `npm run dev` again, which compiles the modern CSS configuration in `src/index.css`.

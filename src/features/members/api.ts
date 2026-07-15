@@ -9,7 +9,7 @@ export async function getWorkspaceMembers(
   limit = 10
 ): Promise<PaginationResponse<WorkspaceMember>> {
   const { data } = await apiClient.get(`/workspaces/${workspaceId}/users`, {
-    params: { page, limit },
+    params: { pageNumber: page, pageSize: limit },
   })
   return parseResponse<PaginationResponse<WorkspaceMember>>(data)
 }

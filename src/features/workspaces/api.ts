@@ -5,7 +5,7 @@ import type { Workspace, WorkspaceCreateInput, WorkspaceUpdateInput } from './ty
 
 export async function getWorkspaces(page: number, limit = 6): Promise<PaginationResponse<Workspace>> {
   const { data } = await apiClient.get('/workspaces', {
-    params: { page, limit },
+    params: { pageNumber: page, pageSize: limit },
   })
   return parseResponse<PaginationResponse<Workspace>>(data)
 }

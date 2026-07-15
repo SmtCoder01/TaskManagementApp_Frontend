@@ -14,7 +14,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5174',
+        // Backend: dotnet run → https://localhost:7052 (CORS yok; proxy ile aynı origin)
+        target: 'https://localhost:7052',
         changeOrigin: true,
         secure: false,
       },

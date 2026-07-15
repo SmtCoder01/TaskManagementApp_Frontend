@@ -7,6 +7,7 @@ import { TaskFilters } from '../features/tasks/components/TaskFilters'
 import { TaskForm } from '../features/tasks/components/TaskForm'
 import { TaskStatus, TaskPriority } from '../features/tasks/types'
 import { useWorkspace } from '../features/workspaces/hooks'
+import { useProject } from '../features/projects/hooks'
 import { LoadingState } from '../components/ui/LoadingState'
 import { ErrorState } from '../components/ui/ErrorState'
 import { showApiErrorToast } from '../utils/errorHandler'
@@ -16,7 +17,8 @@ import type { TaskListItem } from '../features/tasks/types'
 export function Project() {
   const { id, projectId } = useParams<{ id: string; projectId: string }>()
   const workspaceId = id ? Number(id) : 0
-  const cleanProjectId = projectId ? Number(projectId.replace(/\D/g, '')) || 1 : 1
+  const numericProjectId = projectId ? Number(projectId) : 0
+  const isValidProjectId = Number.isFinite(numericProjectId) && numericProjectId > 0
 
   // State
   const [filters, setFilters] = useState<{ status?: TaskStatus; assigneeId?: number; q?: string }>({})
@@ -25,6 +27,7 @@ export function Project() {
 
   // Queries
   const { data: workspace } = useWorkspace(workspaceId)
+  const { data: project } = useProject(isValidProjectId ? numericProjectId : undefined, workspaceId)
   const { data: membersData } = useWorkspaceMembers(workspaceId, 1, 100)
   const { data: tasksData, isLoading: isLoadingTasks, isError: isErrorTasks, refetch: refetchTasks } = useTasks(workspaceId, {
     status: filters.status,
@@ -40,7 +43,7 @@ export function Project() {
   const members = membersData?.items ?? []
   
   // Filter tasks by this project ID on client-side
-  const tasks = (tasksData?.items ?? []).filter((t) => t.projectId === cleanProjectId)
+  const tasks = (tasksData?.items ?? []).filter((t) => t.projectId === numericProjectId)
 
   // Handlers
   const handleOpenCreateModal = () => {
@@ -72,7 +75,7 @@ export function Project() {
       } else {
         // Create task
         await createTaskMutation.mutateAsync({
-          projectId: cleanProjectId,
+          projectId: numericProjectId,
           title: formData.title,
           description: formData.description,
           priority: formData.priority,
@@ -129,6 +132,15 @@ export function Project() {
     return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
   }
 
+  if (!isValidProjectId) {
+    return (
+      <ErrorState
+        title="Geçersiz proje"
+        message="Proje kimliği geçersiz veya eksik."
+      />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12">
       {/* Header */}
@@ -145,7 +157,7 @@ export function Project() {
                   {workspace?.name || `Çalışma Alanı ${workspaceId}`}
                 </Link>
                 <span>/</span>
-                <span className="text-slate-900 font-medium">Proje {projectId}</span>
+                <span className="text-slate-900 font-medium">{project?.name || `Proje ${numericProjectId}`}</span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2 mt-1">
                 <FolderKanban className="h-8 w-8 text-indigo-600" />
