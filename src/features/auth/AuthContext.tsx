@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect } from 'react'
+import { createContext, useContext, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
@@ -6,6 +6,7 @@ import { useMe } from './hooks'
 
 import { queryKeys } from '../../lib/queryKeys'
 import type { User } from '../../types/api'
+import { ApiError } from '../../api/parseResponse'
 
 interface AuthContextType {
   user: User | null
@@ -24,18 +25,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const { data: user, isLoading, error } = useMe()
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('access_token')
     queryClient.clear()
     queryClient.invalidateQueries({ queryKey: queryKeys.auth.all })
     navigate('/login')
-  }
+  }, [queryClient, navigate])
 
   useEffect(() => {
-    if (error && ((error as any).statusCode === 401 || (error as any).status === 401)) {
+    if (error && ((error as ApiError).statusCode === 401 || (error as { status?: number }).status === 401)) {
       logout()
     }
-  }, [error])
+  }, [error, logout])
 
   const isAuthenticated = !!token && !!user
 

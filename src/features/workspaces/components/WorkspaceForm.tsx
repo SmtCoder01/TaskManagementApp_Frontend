@@ -4,10 +4,11 @@ import { workspaceSchema, type WorkspaceSchemaInput } from '../validation'
 import { Input } from '../../../components/ui/Input'
 import { Textarea } from '../../../components/ui/Textarea'
 import { Button } from '../../../components/ui/Button'
+import { applyFieldErrors, showApiErrorToast } from '../../../utils/errorHandler'
 
 interface WorkspaceFormProps {
   defaultValues?: Partial<WorkspaceSchemaInput>
-  onSubmit: (data: WorkspaceSchemaInput) => void
+  onSubmit: (data: WorkspaceSchemaInput) => Promise<void>
   isLoading: boolean
   submitLabel?: string
 }
@@ -21,14 +22,25 @@ export function WorkspaceForm({
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<WorkspaceSchemaInput>({
     resolver: zodResolver(workspaceSchema),
     defaultValues,
   })
 
+  const handleFormSubmit = async (data: WorkspaceSchemaInput) => {
+    try {
+      await onSubmit(data)
+    } catch (err) {
+      if (!applyFieldErrors(err, setError)) {
+        showApiErrorToast(err, 'Workspace kaydedilirken bir hata oluştu.')
+      }
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <Input
         id="workspace-name"
         label="Workspace Name"

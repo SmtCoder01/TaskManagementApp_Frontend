@@ -4,10 +4,11 @@ import { projectSchema, type ProjectSchemaInput } from '../validation'
 import { Input } from '../../../components/ui/Input'
 import { Textarea } from '../../../components/ui/Textarea'
 import { Button } from '../../../components/ui/Button'
+import { applyFieldErrors, showApiErrorToast } from '../../../utils/errorHandler'
 
 interface ProjectFormProps {
   defaultValues?: Partial<ProjectSchemaInput>
-  onSubmit: (data: ProjectSchemaInput) => void
+  onSubmit: (data: ProjectSchemaInput) => Promise<void>
   isLoading: boolean
   submitLabel?: string
 }
@@ -21,14 +22,25 @@ export function ProjectForm({
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<ProjectSchemaInput>({
     resolver: zodResolver(projectSchema),
     defaultValues,
   })
 
+  const handleFormSubmit = async (data: ProjectSchemaInput) => {
+    try {
+      await onSubmit(data)
+    } catch (err) {
+      if (!applyFieldErrors(err, setError)) {
+        showApiErrorToast(err, 'Proje kaydedilirken bir hata oluştu.')
+      }
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <Input
         id="project-name"
         label="Project Name"

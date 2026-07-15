@@ -30,21 +30,8 @@ export function ProjectSettingsPage() {
   }
 
   const handleUpdate = async (formData: { name: string; description?: string }) => {
-    try {
-      await updateMutation.mutateAsync(formData)
-      showToast('Project updated successfully!')
-    } catch (err) {
-      console.error(err)
-      if (err instanceof ApiError) {
-        if (err.code === 'PROJECT_UPDATE_FORBIDDEN' || err.statusCode === 403) {
-          showToast('You do not have permission to update this project.', 'error')
-        } else {
-          showToast(err.message || 'Failed to update project.', 'error')
-        }
-      } else {
-        showToast(err instanceof Error ? err.message : 'An unexpected error occurred.', 'error')
-      }
-    }
+    await updateMutation.mutateAsync(formData)
+    showToast('Project updated successfully!')
   }
 
   const handleDelete = async () => {

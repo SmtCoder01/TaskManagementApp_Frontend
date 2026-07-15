@@ -30,6 +30,7 @@ export function Project() {
   const { data: project } = useProject(isValidProjectId ? numericProjectId : undefined, workspaceId)
   const { data: membersData } = useWorkspaceMembers(workspaceId, 1, 100)
   const { data: tasksData, isLoading: isLoadingTasks, isError: isErrorTasks, refetch: refetchTasks } = useTasks(workspaceId, {
+    projectId: numericProjectId,
     status: filters.status,
     assigneeId: filters.assigneeId,
     q: filters.q,
@@ -41,9 +42,7 @@ export function Project() {
   const deleteTaskMutation = useDeleteTask()
 
   const members = membersData?.items ?? []
-  
-  // Filter tasks by this project ID on client-side
-  const tasks = (tasksData?.items ?? []).filter((t) => t.projectId === numericProjectId)
+  const tasks = tasksData?.items ?? []
 
   // Handlers
   const handleOpenCreateModal = () => {
@@ -69,6 +68,7 @@ export function Project() {
             status: formData.status,
             dueDate: formData.dueDate,
             assigneeId: formData.assigneeId,
+            unassign: formData.assigneeId === null,
           },
         })
         toast.success('Görev başarıyla güncellendi!')
@@ -87,6 +87,7 @@ export function Project() {
     } catch (err: any) {
       console.error(err)
       showApiErrorToast(err, 'İşlem gerçekleştirilirken bir hata oluştu.')
+      throw err
     }
   }
 

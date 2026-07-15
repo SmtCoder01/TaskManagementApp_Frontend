@@ -6,6 +6,7 @@ import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { addMemberSchema, type AddMemberSchemaInput } from '../validation'
 import { WorkspaceRole } from '../types'
+import { applyFieldErrors, showApiErrorToast } from '@/utils/errorHandler'
 
 interface AddMemberModalProps {
   isOpen: boolean
@@ -19,6 +20,7 @@ export function AddMemberModal({ isOpen, onClose, onSubmit, isLoading }: AddMemb
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<AddMemberSchemaInput>({
     resolver: zodResolver(addMemberSchema),
@@ -34,7 +36,9 @@ export function AddMemberModal({ isOpen, onClose, onSubmit, isLoading }: AddMemb
       reset()
       onClose()
     } catch (err) {
-      console.error(err)
+      if (!applyFieldErrors(err, setError)) {
+        showApiErrorToast(err, 'Üye eklenirken bir hata oluştu.')
+      }
     }
   }
 

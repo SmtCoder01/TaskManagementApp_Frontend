@@ -29,21 +29,8 @@ export function WorkspaceSettingsPage() {
   }
 
   const handleUpdate = async (formData: { name: string; description?: string }) => {
-    try {
-      await updateMutation.mutateAsync(formData)
-      showToast('Workspace updated successfully!')
-    } catch (err) {
-      console.error(err)
-      if (err instanceof ApiError) {
-        if (err.code === 'WORKSPACE_UPDATE_FORBIDDEN' || err.statusCode === 403) {
-          showToast('You do not have permission to update this workspace. Admin role required.', 'error')
-        } else {
-          showToast(err.message || 'Failed to update workspace.', 'error')
-        }
-      } else {
-        showToast('An unexpected error occurred.', 'error')
-      }
-    }
+    await updateMutation.mutateAsync(formData)
+    showToast('Workspace updated successfully!')
   }
 
   const handleDelete = async () => {

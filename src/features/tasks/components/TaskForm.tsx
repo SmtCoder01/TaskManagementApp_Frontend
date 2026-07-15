@@ -101,14 +101,18 @@ export function TaskForm({
   }, [isOpen, initialValues, reset])
 
   const handleFormSubmit = async (data: TaskFormSchemaInput) => {
-    // Convert empty string for dueDate to null, and clean up fields
     const payload = {
       ...data,
       dueDate: data.dueDate && data.dueDate !== '' ? new Date(data.dueDate).toISOString() : null,
       assigneeId: data.assigneeId || null,
     }
-    await onSubmit(payload)
-    onClose()
+
+    try {
+      await onSubmit(payload)
+      onClose()
+    } catch {
+      // Parent handles toast/errors; keep modal open on failure.
+    }
   }
 
   return (

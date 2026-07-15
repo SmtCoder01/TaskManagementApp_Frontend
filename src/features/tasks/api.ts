@@ -11,9 +11,10 @@ export async function getTasks(
     params: {
       workspaceId,
       pageNumber: params?.pageNumber ?? 1,
-      pageSize: params?.pageSize ?? 100, // Load enough for Kanban board by default
+      pageSize: params?.pageSize ?? 100,
       status: params?.status,
       assigneeId: params?.assigneeId,
+      projectId: params?.projectId,
       q: params?.q,
     },
   })

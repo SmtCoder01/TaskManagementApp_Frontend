@@ -56,24 +56,8 @@ export function WorkspaceMembers() {
 
   // Handlers
   const handleAddMember = async (data: { email: string; role: WorkspaceRole }) => {
-    try {
-      await addMemberMutation.mutateAsync(data)
-      showAlert('Üye çalışma alanına başarıyla eklendi!')
-      setIsAddModalOpen(false)
-    } catch (err) {
-      console.error(err)
-      if (err instanceof ApiError) {
-        if (err.code === 'WORKSPACE_MANAGE_MEMBERS_FORBIDDEN' || err.statusCode === 403) {
-          showAlert('Üye ekleme yetkiniz bulunmamaktadır. Admin rolü gereklidir.', 'error')
-        } else if (err.code === 'USER_NOT_FOUND') {
-          showAlert('Belirtilen e-posta adresine ait bir kullanıcı bulunamadı.', 'error')
-        } else {
-          showAlert(err.message || 'Üye eklenirken bir hata oluştu.', 'error')
-        }
-      } else {
-        showAlert('Beklenmeyen bir hata oluştu.', 'error')
-      }
-    }
+    await addMemberMutation.mutateAsync(data)
+    showAlert('Üye çalışma alanına başarıyla eklendi!')
   }
 
   const handleRemoveMember = async () => {
@@ -229,6 +213,9 @@ export function WorkspaceMembers() {
         }
         onConfirm={handleRemoveMember}
         onClose={() => setMemberToRemove(null)}
+        isLoading={removeMemberMutation.isPending}
+        confirmLabel="Kaldır"
+        cancelLabel="İptal"
       />
     </div>
   )

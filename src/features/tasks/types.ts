@@ -48,6 +48,7 @@ export interface UpdateTaskInput {
   priority?: TaskPriority
   dueDate?: string | null
   assigneeId?: number | null
+  unassign?: boolean
 }
 
 export interface TaskListParams {
@@ -55,5 +56,6 @@ export interface TaskListParams {
   pageSize?: number
   status?: TaskStatus
   assigneeId?: number
+  projectId?: number
   q?: string
 }

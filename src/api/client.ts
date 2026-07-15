@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { queryClient } from '../lib/react-query'
 import { ApiError } from './parseResponse'
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
@@ -32,7 +33,7 @@ apiClient.interceptors.response.use(
       const isLoginRequest = error.config.url?.includes('/auth/login')
       if (!isLoginRequest) {
         localStorage.removeItem('access_token')
-        // Clear query cache and redirect
+        queryClient.clear()
         window.location.href = '/login'
       }
     }

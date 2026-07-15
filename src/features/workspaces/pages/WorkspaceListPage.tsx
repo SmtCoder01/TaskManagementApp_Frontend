@@ -28,14 +28,9 @@ export function WorkspaceListPage() {
   const deleteMutation = useDeleteWorkspace()
 
   const handleCreateWorkspace = async (formData: { name: string; description?: string }) => {
-    try {
-      await createMutation.mutateAsync(formData)
-      setIsCreateOpen(false)
-      toast.success('Workspace created successfully!')
-    } catch (err) {
-      console.error(err)
-      showApiErrorToast(err, 'Failed to create workspace.')
-    }
+    await createMutation.mutateAsync(formData)
+    setIsCreateOpen(false)
+    toast.success('Workspace created successfully!')
   }
 
   const handleDeleteWorkspace = async () => {

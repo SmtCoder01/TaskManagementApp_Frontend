@@ -11,7 +11,6 @@ import { Pagination } from '../components/ui/Pagination'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
 import { ErrorState } from '../components/ui/ErrorState'
-import { showApiErrorToast } from '../utils/errorHandler'
 import { toast } from 'sonner'
 
 export function Workspace() {
@@ -27,14 +26,9 @@ export function Workspace() {
   const createMutation = useCreateProject(workspaceId)
 
   const handleCreateProject = async (formData: { name: string; description?: string }) => {
-    try {
-      await createMutation.mutateAsync(formData)
-      setIsCreateOpen(false)
-      toast.success('Project created successfully!')
-    } catch (err) {
-      console.error(err)
-      showApiErrorToast(err, 'Failed to create project.')
-    }
+    await createMutation.mutateAsync(formData)
+    setIsCreateOpen(false)
+    toast.success('Project created successfully!')
   }
 
   if (isLoadingWorkspace) {

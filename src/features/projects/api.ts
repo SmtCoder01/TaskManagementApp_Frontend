@@ -1,7 +1,12 @@
 import { apiClient } from '../../api/client'
+import { normalizeProject } from '../../api/normalize'
 import { parseResponse } from '../../api/parseResponse'
 import type { PaginationResponse } from '../../types/api'
 import type { Project, ProjectCreateInput, ProjectUpdateInput } from './types'
+
+function mapProject(raw: unknown): Project {
+  return normalizeProject(raw as Record<string, unknown>)
+}
 
 export async function getProjects(
   workspaceId: number,
@@ -11,7 +16,8 @@ export async function getProjects(
   const { data } = await apiClient.get(`/workspaces/${workspaceId}/projects`, {
     params: { pageNumber: page, pageSize: limit },
   })
-  return parseResponse<PaginationResponse<Project>>(data)
+  const result = parseResponse<PaginationResponse<Record<string, unknown>>>(data)
+  return { ...result, items: result.items.map(mapProject) }
 }
 
 export async function createProject(
@@ -19,12 +25,12 @@ export async function createProject(
   payload: ProjectCreateInput,
 ): Promise<Project> {
   const { data } = await apiClient.post(`/workspaces/${workspaceId}/projects`, payload)
-  return parseResponse<Project>(data)
+  return mapProject(parseResponse<Record<string, unknown>>(data))
 }
 
 export async function getProject(projectId: number): Promise<Project> {
   const { data } = await apiClient.get(`/projects/${projectId}`)
-  return parseResponse<Project>(data)
+  return mapProject(parseResponse<Record<string, unknown>>(data))
 }
 
 export async function updateProject(
@@ -32,7 +38,7 @@ export async function updateProject(
   payload: ProjectUpdateInput,
 ): Promise<Project> {
   const { data } = await apiClient.patch(`/projects/${projectId}`, payload)
-  return parseResponse<Project>(data)
+  return mapProject(parseResponse<Record<string, unknown>>(data))
 }
 
 export async function deleteProject(projectId: number): Promise<void> {
